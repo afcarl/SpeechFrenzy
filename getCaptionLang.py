@@ -62,7 +62,7 @@ def get_authenticated_service(args):
 
 def downloadVideo(channelID, videoID):
   print "getting vid", "https://www.youtube.com/watch?v="+videoID
-  call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+videoIDName+".webm", "https://www.youtube.com/watch?v="+videoID])
+  call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+videoIDName, "https://www.youtube.com/watch?v="+videoID])
 
 def deleteVideo():
   call(["rm", INPUT_DIR+videoIDName+".webm"])
