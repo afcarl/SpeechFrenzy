@@ -25,6 +25,8 @@ CLIENT_SECRETS_FILE = "client_secrets.json"
 YOUTUBE_READ_WRITE_SSL_SCOPE = "https://www.googleapis.com/auth/youtube.force-ssl"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
+folderName =""
+videoIDName =""
 
 MISSING_CLIENT_SECRETS_MESSAGE = """
 WARNING: Please configure OAuth 2.0
@@ -60,16 +62,16 @@ def get_authenticated_service(args):
 
 def downloadVideo(channelID, videoID):
   print "getting vid", "https://www.youtube.com/watch?v="+videoID
-  call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+"123.webm", "https://www.youtube.com/watch?v="+videoID])
+  call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+videoIDName+".webm", "https://www.youtube.com/watch?v="+videoID])
 
-def deleteVideo(channelID, videoID):
-  call(["rm", INPUT_DIR+"123.webm"])
+def deleteVideo():
+  call(["rm", INPUT_DIR+videoIDName+".webm"])
 
-def cutTheAudio(filename, timeOne, timeTwo, captionNum):
+def cutTheAudio(timeOne, timeTwo, captionNum):
   success = 0;
-  webm_version = AudioSegment.from_file(INPUT_DIR+filename)
+  webm_version = AudioSegment.from_file(INPUT_DIR+videoIDName)
   split = webm_version[timeOne:timeTwo]
-  split.export(OUTPUT_DIR+filename+"-"+str(captionNum)+".wav", format="wav")
+  split.export(OUTPUT_DIR+folderName+"/"+videoIDName+"-"+str(captionNum)+".wav", format="wav")
   return success;
 
 def convTimeToMilli(time):
@@ -90,7 +92,7 @@ def trim(subtitle):
   for s in splitSubs:
     if len(s) == 0:
       print currLine
-      cutTheAudio("123.webm", startSplit, endSplit, capCount)
+      cutTheAudio(startSplit, endSplit, capCount)
       capCount+=1
       captionFinishedState=1
     else:
@@ -132,7 +134,7 @@ def list_captions(youtube, video_id):
     trim(subtitle)
 
     # print "First line of caption track: %s" % (subtitle)
-  deleteVideo("",video_id)
+  deleteVideo()
     
 
 def callVid(video_id):
@@ -142,6 +144,7 @@ def callVid(video_id):
     print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
   else:
     print "Created and managed caption tracks."
+
 
 if __name__ == "__main__":
   argparser.add_argument("--channelid", help="Required; ID for channel from which the videos will be sourced from")
@@ -173,6 +176,8 @@ if __name__ == "__main__":
       for playlist_item in playlistitems_list_response["items"]:
         title = playlist_item["snippet"]["title"]
         video_id = playlist_item["snippet"]["resourceId"]["videoId"]
+        videoIDName=video_id
+        folderName=channel_id
         callVid(video_id)
         count+=1
 
