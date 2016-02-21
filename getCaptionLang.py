@@ -96,7 +96,7 @@ def captionParser(allCaptions):
     capCount = 1
     for block in captionBlocks:      
       if len(block) >= 3:
-        print "["+ videoCount + "] " + videoIDName + " " + capCount + "/" + len(captionBlocks) + "\n"
+        print "["+ str(videoCount) + "] " + videoIDName + " " + str(capCount) + "/" + str(len(captionBlocks)) + "\n"
         # timestamps
         lines = block.split("\n")
         times = lines[0].split(",")
