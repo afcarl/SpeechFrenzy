@@ -63,7 +63,7 @@ youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
 # Retrieve the contentDetails part of the channel resource for the
 # authenticated user's channel.
 channels_response = youtube.channels().list(
-  id="UCX6b17PVsYBQ0ip5gyeme-Q",
+  id="UCC552Sd-3nyi_tk2BudLUzA",
   part="contentDetails"
 ).execute()
 
