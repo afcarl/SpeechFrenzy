@@ -59,7 +59,6 @@ def get_authenticated_service(args):
     doc = f.read()
     return build_from_document(doc, http=credentials.authorize(httplib2.Http()))
 
-
 def downloadVideo(channelID, videoID):
   print "getting vid", "https://www.youtube.com/watch?v="+videoID
   call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+videoIDName, "https://www.youtube.com/watch?v="+videoID])
@@ -67,15 +66,15 @@ def downloadVideo(channelID, videoID):
 def deleteVideo():
   call(["rm", INPUT_DIR+videoIDName+".webm"])
 
-
 def mkdir():
   call(["mkdir", OUTPUT_DIR+folderName+"/"])
+  file('captions.txt','wt')
 
 def cutTheAudio(timeOne, timeTwo, captionNum):
   success = 0;
   webm_version = AudioSegment.from_file(INPUT_DIR+videoIDName)
   split = webm_version[timeOne:timeTwo]
-  split.export(OUTPUT_DIR+folderName+"/"+videoIDName+"-"+str(captionNum)+".wav", format="wav")
+  split.export(OUTPUT_DIR+folderName+videoIDName+"-"+str(captionNum)+".wav", format="wav")
   return success;
 
 def convTimeToMilli(time):
@@ -86,34 +85,51 @@ def convTimeToMilli(time):
   milliTime += float(times[2])*1000
   return milliTime
 
-def trim(subtitle):
-  splitSubs = subtitle.split("\n")
+def captionParser(allCaptions):
+  captionBlocks = allCaptions.split("\n\n")
   capCount = 1
-  captionFinishedState = 1
-  startSplit = 0
-  endSplit = 0
-  currLine =""
-  for s in splitSubs:
-    if len(s) == 0:
-      print currLine
-      cutTheAudio(startSplit, endSplit, capCount)
-      capCount+=1
-      captionFinishedState=1
-    else:
-      if captionFinishedState==1:
-        print capCount
-        currLine =""
-        times = s.split(",")
-        millistart = convTimeToMilli(times[0])
-        startSplit= millistart-STARTFIX if millistart - STARTFIX > 0  else int(0)
-        endSplit=convTimeToMilli(times[1]) + STARTFIX
-        print "start at ",times[0], "or", startSplit
-        print "end at ",times[1], "or", endSplit
-        captionFinishedState=0
-      else:
-        currLine +=s.strip()+" "
+  for block in captionBlocks:
+    # timestamps
+    lines = block.split("\n")
+    times = lines[0].split(",")
+    millistart = convTimeToMilli(times[0])
+    startSplit= millistart-STARTFIX if millistart - STARTFIX > 0  else int(0)
+    endSplit=convTimeToMilli(times[1]) + STARTFIX
+    print "start at ",times[0], "or", startSplit
+    print "end at ",times[1], "or", endSplit
+    
+    #caption text
+    currLine =""
+    for i in range(1, len(lines)):
+      currLine += lines[i]
+    
+    # save the data
+    cutTheAudio(startSplit, endSplit, capCount)
+    captionFile.write(capCount+"| "+videoIDName+"| "+startSplit+"| "+ endSplit+"| "+ str(endSplit-startSplit) + "| " + currLine "\n")
 
-# Call the API's captions.list method to list the existing caption tracks.
+    capCount+=1;
+  sys.exit()
+    # if len(line) == 0:
+    #   if timeStampState==0:
+    #     print currLine
+    #     cutTheAudio(startSplit, endSplit, capCount)
+    #     captionFile.write(capCount+"| "+videoIDName+"| "+startSplit+"| "+ endSplit+"| "+ str(endSplit-startSplit) + "| " + currLine "\n")
+    #     capCount+=1
+    #     timeStampState=1
+    # else:
+    #   if timeStampState==1:
+    #     print capCount
+    #     currLine =""
+    #     times = line.split(",")
+    #     millistart = convTimeToMilli(times[0])
+    #     startSplit= millistart-STARTFIX if millistart - STARTFIX > 0  else int(0)
+    #     endSplit=convTimeToMilli(times[1]) + STARTFIX
+    #     print "start at ",times[0], "or", startSplit
+    #     print "end at ",times[1], "or", endSplit
+    #     timeStampState=0
+    #   else:
+    #     currLine +=line.strip()+" "
+
 def list_captions(youtube, video_id):
   results = youtube.captions().list(
     part="snippet",
@@ -130,17 +146,18 @@ def list_captions(youtube, video_id):
     if trackKind == "ASR" or "en" not in language:
       print "Type ASR or no en -> skipping"
       continue
-    subtitle = youtube.captions().download(
+    allCaptions = youtube.captions().download(
       id=capid,
       tfmt='sbv').execute()
 
     #TODO CHANNEL ID ON LEFT
-    trim(subtitle)
+    # with open(folderName+"captionLabels.csv", "a") as captionFile:
+    captionParser(allCaptions)
+    
 
     # print "First line of caption track: %s" % (subtitle)
   deleteVideo()
     
-
 def callVid(video_id):
   try:
     list_captions(youtube, video_id)
@@ -148,7 +165,6 @@ def callVid(video_id):
     print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
   else:
     print "Created and managed caption tracks."
-
 
 if __name__ == "__main__":
   argparser.add_argument("--channelid", help="Required; ID for channel from which the videos will be sourced from")
@@ -172,7 +188,7 @@ if __name__ == "__main__":
     )
 
     count =0
-    folderName=args.channelid
+    folderName=args.channelid+"/"
     mkdir()
     while playlistitems_list_request and count < 4:
       playlistitems_list_response = playlistitems_list_request.execute()
