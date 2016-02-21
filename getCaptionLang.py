@@ -61,11 +61,14 @@ def downloadVideo(channelID, videoID):
   print "getting vid", "https://www.youtube.com/watch?v="+videoID
   call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+"123.webm", "https://www.youtube.com/watch?v="+videoID])
 
+def deleteVideo(channelID, videoID):
+  call["rm", INPUT_DIR+"123.webm"])
+
 def cutTheAudio(filename, timeOne, timeTwo, captionNum):
   success = 0;
   webm_version = AudioSegment.from_file(INPUT_DIR+filename, "webm")
   split = webm_version[timeOne:timeTwo]
-  split.export(OUTPUT_DIR+filename+"-"+captionNum+".wav", format="wav")
+  split.export(OUTPUT_DIR+filename+"-"+str(captionNum)+".wav", format="wav")
   return success;
 
 def convTimeToMilli(time):
@@ -109,6 +112,7 @@ def list_captions(youtube, video_id):
     videoId=video_id
   ).execute()
 
+  downloadVideo("",video_id)
   for item in results["items"]:
     capid = item["id"]
     language = item["snippet"]["language"]
@@ -123,9 +127,10 @@ def list_captions(youtube, video_id):
       tfmt='sbv').execute()
 
     #TODO CHANNEL ID ON LEFT
-    downloadVideo("",video_id)
     trim(subtitle)
+    
     # print "First line of caption track: %s" % (subtitle)
+  deleteVideo("",video_id)
     
 
 if __name__ == "__main__":
