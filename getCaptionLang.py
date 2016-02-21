@@ -65,6 +65,41 @@ def get_authenticated_service(args):
     doc = f.read()
     return build_from_document(doc, http=credentials.authorize(httplib2.Http()))
 
+
+def cutTheAudio(filename, timeOne, timeTwo, captionNo):
+  print timeOne
+  print timeTwo
+
+def convTimeToMilli(time):
+  milliTime = 0
+  times = time.split(":")
+  milliTime += int(times[0])*60*60*1000
+  milliTime += int(times[1])*60*1000
+  milliTime += float(times[2])*1000
+  return milliTime
+
+def trim(subtitle):
+  splitSubs = subtitle.split("\n")
+  capCount = 0
+  timeStamp = 1
+  currLine =""
+  for s in splitSubs:
+    if len(s) == 0:
+      print currLine
+      print capCount
+      capCount+=1
+      timeStamp=1
+      currLine =""
+    else:
+      if timeStamp==1:
+        currLine =""
+        times = s.split(",")
+        print "start at ",times[0], "or", convTimeToMilli(times[0]),
+        print "end at ",times[1], "or", convTimeToMilli(times[1])
+        timeStamp=0
+      else:
+        currLine +=s.strip()+" "
+
 # Call the API's captions.list method to list the existing caption tracks.
 def list_captions(youtube, video_id):
   results = youtube.captions().list(
@@ -83,8 +118,9 @@ def list_captions(youtube, video_id):
       id=capid,
       tfmt='sbv').execute()
 
-    print "First line of caption track: %s" % (subtitle)
-
+    trim(subtitle)
+    # print "First line of caption track: %s" % (subtitle)
+    
 
 if __name__ == "__main__":
   argparser.add_argument("--videoid", help="Required; ID for video for which the caption track will be uploaded.")
