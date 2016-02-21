@@ -59,7 +59,7 @@ def get_authenticated_service(args):
 
 def downloadVideo(channelID, videoID):
   print "getting vid", "https://www.youtube.com/watch?v="+videoID
-  call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+"/123", "https://www.youtube.com/watch?v="+videoID])
+  call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+"/123.webm", "https://www.youtube.com/watch?v="+videoID])
 
 def cutTheAudio(filename, timeOne, timeTwo, captionNum):
    success = 0;
