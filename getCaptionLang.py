@@ -58,6 +58,7 @@ def get_authenticated_service(args):
 
 
 def downloadVideo(channelID, videoID):
+  print "getting vid", "https://www.youtube.com/watch?v="+videoID
   call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+"/123", "https://www.youtube.com/watch?v="+videoID])
 
 def cutTheAudio(filename, timeOne, timeTwo, captionNum):
@@ -79,7 +80,6 @@ def convTimeToMilli(time):
   return milliTime
 
 def trim(subtitle):
-  downloadVideo("","")
   splitSubs = subtitle.split("\n")
   capCount = 1
   captionFinishedState = 1
@@ -125,6 +125,8 @@ def list_captions(youtube, video_id):
       id=capid,
       tfmt='sbv').execute()
 
+    #TODO CHANNEL ID ON LEFT
+    downloadVideo("",video_id)
     trim(subtitle)
     # print "First line of caption track: %s" % (subtitle)
     
