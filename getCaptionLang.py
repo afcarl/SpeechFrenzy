@@ -99,7 +99,7 @@ def trim(subtitle):
         currLine =""
         times = s.split(",")
         millistart = convTimeToMilli(times[0])
-        startSplit=millistart - STARTFIX > 0 ? millistart-STARTFIX : millistart
+        startSplit=millistart - STARTFIX > 0 if millistart-STARTFIX else millistart
         endSplit=convTimeToMilli(times[1]) + STARTFIX
         print "start at ",times[0], "or", startSplit
         print "end at ",times[1], "or", endSplit
