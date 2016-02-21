@@ -62,7 +62,7 @@ def downloadVideo(channelID, videoID):
   call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+"123.webm", "https://www.youtube.com/watch?v="+videoID])
 
 def deleteVideo(channelID, videoID):
-  call["rm", INPUT_DIR+"123.webm"])
+  call(["rm", INPUT_DIR+"123.webm"])
 
 def cutTheAudio(filename, timeOne, timeTwo, captionNum):
   success = 0;
@@ -128,7 +128,7 @@ def list_captions(youtube, video_id):
 
     #TODO CHANNEL ID ON LEFT
     trim(subtitle)
-    
+
     # print "First line of caption track: %s" % (subtitle)
   deleteVideo("",video_id)
     
