@@ -135,15 +135,46 @@ def list_captions(youtube, video_id):
   deleteVideo("",video_id)
     
 
-if __name__ == "__main__":
-  argparser.add_argument("--videoid", help="Required; ID for video for which the caption track will be uploaded.")
-
-  args = argparser.parse_args()
-
-  youtube = get_authenticated_service(args)
+def callVid(video_id):
   try:
-    list_captions(youtube, args.videoid)
+    list_captions(youtube, video_id)
   except HttpError, e:
     print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
   else:
     print "Created and managed caption tracks."
+
+if __name__ == "__main__":
+  argparser.add_argument("--channelid", help="Required; ID for channel from which the videos will be sourced from")
+  args = argparser.parse_args()
+  youtube = get_authenticated_service(args)
+
+  channels_response = youtube.channels().list(
+    id=args.channelid,
+    part="contentDetails"
+  ).execute()
+
+  for channel in channels_response["items"]:
+    uploads_list_id = channel["contentDetails"]["relatedPlaylists"]["uploads"]
+
+    print "Videos in list %s" % uploads_list_id
+
+    playlistitems_list_request = youtube.playlistItems().list(
+      playlistId=uploads_list_id,
+      part="snippet",
+      maxResults=1
+    )
+
+    count =0
+
+    while playlistitems_list_request and count < 4:
+      playlistitems_list_response = playlistitems_list_request.execute()
+
+
+      for playlist_item in playlistitems_list_response["items"]:
+        title = playlist_item["snippet"]["title"]
+        video_id = playlist_item["snippet"]["resourceId"]["videoId"]
+        callVid(video_id)
+        count+=1
+
+      playlistitems_list_request = youtube.playlistItems().list_next(
+        playlistitems_list_request, playlistitems_list_response)
