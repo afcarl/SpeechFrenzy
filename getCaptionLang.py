@@ -20,6 +20,8 @@ START_TAG = "start"
 DUR_TAG = "dur"
 STARTFIX = 150
 
+sys.getdefaultencoding()
+
 CLIENT_SECRETS_FILE = "client_secrets.json"
 
 YOUTUBE_READ_WRITE_SSL_SCOPE = "https://www.googleapis.com/auth/youtube.force-ssl"
@@ -27,6 +29,7 @@ YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 folderName =""
 videoIDName =""
+captionFileName ="captionLabels.csv"
 
 MISSING_CLIENT_SECRETS_MESSAGE = """
 WARNING: Please configure OAuth 2.0
@@ -68,7 +71,7 @@ def deleteVideo():
 
 def mkdir():
   call(["mkdir", OUTPUT_DIR+folderName+"/"])
-  file('captions.txt','wt')
+  file(OUTPUT_DIR+folderName+captionFileName,'wt')
 
 def cutTheAudio(timeOne, timeTwo, captionNum):
   success = 0;
@@ -80,56 +83,40 @@ def cutTheAudio(timeOne, timeTwo, captionNum):
 def convTimeToMilli(time):
   milliTime = 0
   times = time.split(":")
+  print times
   milliTime += int(times[0])*60*60*1000
   milliTime += int(times[1])*60*1000
   milliTime += float(times[2])*1000
   return milliTime
 
 def captionParser(allCaptions):
-  captionBlocks = allCaptions.split("\n\n")
-  capCount = 1
-  for block in captionBlocks:
-    # timestamps
-    lines = block.split("\n")
-    times = lines[0].split(",")
-    millistart = convTimeToMilli(times[0])
-    startSplit= millistart-STARTFIX if millistart - STARTFIX > 0  else int(0)
-    endSplit=convTimeToMilli(times[1]) + STARTFIX
-    print "start at ",times[0], "or", startSplit
-    print "end at ",times[1], "or", endSplit
-    
-    #caption text
-    currLine =""
-    for i in range(1, len(lines)):
-      currLine += lines[i]
-    
-    # save the data
-    cutTheAudio(startSplit, endSplit, capCount)
-    captionFile.write(capCount+"| "+videoIDName+"| "+startSplit+"| "+ endSplit+"| "+ str(endSplit-startSplit) + "| " + currLine "\n")
-
-    capCount+=1;
-  sys.exit()
-    # if len(line) == 0:
-    #   if timeStampState==0:
-    #     print currLine
-    #     cutTheAudio(startSplit, endSplit, capCount)
-    #     captionFile.write(capCount+"| "+videoIDName+"| "+startSplit+"| "+ endSplit+"| "+ str(endSplit-startSplit) + "| " + currLine "\n")
-    #     capCount+=1
-    #     timeStampState=1
-    # else:
-    #   if timeStampState==1:
-    #     print capCount
-    #     currLine =""
-    #     times = line.split(",")
-    #     millistart = convTimeToMilli(times[0])
-    #     startSplit= millistart-STARTFIX if millistart - STARTFIX > 0  else int(0)
-    #     endSplit=convTimeToMilli(times[1]) + STARTFIX
-    #     print "start at ",times[0], "or", startSplit
-    #     print "end at ",times[1], "or", endSplit
-    #     timeStampState=0
-    #   else:
-    #     currLine +=line.strip()+" "
-
+  with open(OUTPUT_DIR+folderName+captionFileName, "a") as captionFile:
+    captionBlocks = allCaptions.split("\n\n")
+    capCount = 1
+    for block in captionBlocks:
+      if len(block) >= 3:
+        # timestamps
+        lines = block.split("\n")
+        times = lines[0].split(",")
+        millistart = convTimeToMilli(times[0])
+        startSplit= millistart-STARTFIX if millistart - STARTFIX > 0  else int(0)
+        endSplit=convTimeToMilli(times[1]) + STARTFIX
+        print "start at ",times[0], "or", startSplit
+        print "end at ",times[1], "or", endSplit
+        
+        #caption text
+        currLine =""
+        for i in range(1, len(lines)):
+          currLine += lines[i].strip()+" "
+        
+        print currLine
+        # save the data
+        cutTheAudio(startSplit, endSplit, capCount)
+        text = str(capCount)+"| "+ videoIDName+"| "+str(startSplit)+"| "+ str(endSplit)+"| "+ str(endSplit-startSplit) + "| "
+        text = text.encode("UTF-8") + currLine + "\n"
+        captionFile.write(text)
+        capCount+=1;
+        
 def list_captions(youtube, video_id):
   results = youtube.captions().list(
     part="snippet",
@@ -151,7 +138,6 @@ def list_captions(youtube, video_id):
       tfmt='sbv').execute()
 
     #TODO CHANNEL ID ON LEFT
-    # with open(folderName+"captionLabels.csv", "a") as captionFile:
     captionParser(allCaptions)
     
 
