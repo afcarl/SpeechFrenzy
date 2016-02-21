@@ -172,6 +172,7 @@ if __name__ == "__main__":
     )
 
     count =0
+    folderName=args.channelid
     mkdir()
     while playlistitems_list_request and count < 4:
       playlistitems_list_response = playlistitems_list_request.execute()
@@ -181,7 +182,6 @@ if __name__ == "__main__":
         title = playlist_item["snippet"]["title"]
         video_id = playlist_item["snippet"]["resourceId"]["videoId"]
         videoIDName=video_id
-        folderName=channel_id
         callVid(video_id)
         count+=1
 
