@@ -127,8 +127,8 @@ def list_captions(youtube, video_id):
     trackKind = item["snippet"]["trackKind"]
 
     print "Caption track in '%s' language, of type '%s'." % (language,trackKind)
-    if trackKind == "ASR" or string.find(language,"en")==-1:
-      print "Type ASR, skipping"
+    if trackKind == "ASR" or "en" not in language:
+      print "Type ASR or no en -> skipping"
       continue
     subtitle = youtube.captions().download(
       id=capid,
