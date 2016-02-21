@@ -63,11 +63,8 @@ def downloadVideo(channelID, videoID):
 
 def cutTheAudio(filename, timeOne, timeTwo, captionNum):
    success = 0;
-   #TODO deal with >>, different people speaking etc
-   # ogg_version = AudioSegment.from_ogg(INPUT_DIR+filename+".ogg")
-   webm_version = AudioSegment.from_ogg(INPUT_DIR+filename+".webm")
+   webm_version = AudioSegment.from_file(INPUT_DIR+filename+".webm", "webm")
    split = song[timeOne:timeTwo]
-
    split.export(OUTPUT_DIR+filename+"-"+captionNum+".wav", format="wav")
    return success;
 
