@@ -18,6 +18,7 @@ INPUT_DIR = "./input/"
 OUTPUT_DIR = "./output/"
 START_TAG = "start"
 DUR_TAG = "dur"
+STARTFIX = 150
 
 CLIENT_SECRETS_FILE = "client_secrets.json"
 
@@ -66,7 +67,7 @@ def deleteVideo(channelID, videoID):
 
 def cutTheAudio(filename, timeOne, timeTwo, captionNum):
   success = 0;
-  webm_version = AudioSegment.from_file(INPUT_DIR+filename, "webm")
+  webm_version = AudioSegment.from_file(INPUT_DIR+filename)
   split = webm_version[timeOne:timeTwo]
   split.export(OUTPUT_DIR+filename+"-"+str(captionNum)+".wav", format="wav")
   return success;
@@ -97,8 +98,9 @@ def trim(subtitle):
         print capCount
         currLine =""
         times = s.split(",")
-        startSplit=convTimeToMilli(times[0])
-        endSplit=convTimeToMilli(times[1])
+        millistart = convTimeToMilli(times[0])
+        startSplit=millistart - STARTFIX > 0 ? millistart-STARTFIX : millistart
+        endSplit=convTimeToMilli(times[1]) + STARTFIX
         print "start at ",times[0], "or", startSplit
         print "end at ",times[1], "or", endSplit
         captionFinishedState=0
@@ -119,7 +121,7 @@ def list_captions(youtube, video_id):
     trackKind = item["snippet"]["trackKind"]
 
     print "Caption track in '%s' language, of type '%s'." % (language,trackKind)
-    if trackKind == "ASR":
+    if trackKind == "ASR" or language != "en":
       print "Type ASR, skipping"
       continue
     subtitle = youtube.captions().download(
