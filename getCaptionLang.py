@@ -59,14 +59,14 @@ def get_authenticated_service(args):
 
 def downloadVideo(channelID, videoID):
   print "getting vid", "https://www.youtube.com/watch?v="+videoID
-  call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+"/123.webm", "https://www.youtube.com/watch?v="+videoID])
+  call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+"123.webm", "https://www.youtube.com/watch?v="+videoID])
 
 def cutTheAudio(filename, timeOne, timeTwo, captionNum):
-   success = 0;
-   webm_version = AudioSegment.from_file(INPUT_DIR+filename+".webm", "webm")
-   split = song[timeOne:timeTwo]
-   split.export(OUTPUT_DIR+filename+"-"+captionNum+".wav", format="wav")
-   return success;
+  success = 0;
+  webm_version = AudioSegment.from_file(INPUT_DIR+filename, "webm")
+  split = webm_version[timeOne:timeTwo]
+  split.export(OUTPUT_DIR+filename+"-"+captionNum+".wav", format="wav")
+  return success;
 
 def convTimeToMilli(time):
   milliTime = 0
@@ -86,7 +86,7 @@ def trim(subtitle):
   for s in splitSubs:
     if len(s) == 0:
       print currLine
-      cutTheAudio("123", startSplit, endSplit, capCount)
+      cutTheAudio("123.webm", startSplit, endSplit, capCount)
       capCount+=1
       captionFinishedState=1
     else:
