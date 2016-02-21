@@ -176,10 +176,9 @@ if __name__ == "__main__":
       maxResults=50
     )
 
-    count =0
     folderName=args.channelid+"/"
     mkdir()
-    while playlistitems_list_request and count < 4:
+    while playlistitems_list_request:
       playlistitems_list_response = playlistitems_list_request.execute()
 
 
@@ -188,7 +187,6 @@ if __name__ == "__main__":
         video_id = playlist_item["snippet"]["resourceId"]["videoId"]
         videoIDName=video_id
         callVid(video_id)
-        count+=1
 
       playlistitems_list_request = youtube.playlistItems().list_next(
         playlistitems_list_request, playlistitems_list_response)
