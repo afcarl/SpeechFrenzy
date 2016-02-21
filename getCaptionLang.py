@@ -67,6 +67,10 @@ def downloadVideo(channelID, videoID):
 def deleteVideo():
   call(["rm", INPUT_DIR+videoIDName+".webm"])
 
+
+def mkdir():
+  call(["mkdir", OUTPUT_DIR+folderName+"/"])
+
 def cutTheAudio(timeOne, timeTwo, captionNum):
   success = 0;
   webm_version = AudioSegment.from_file(INPUT_DIR+videoIDName)
@@ -168,7 +172,7 @@ if __name__ == "__main__":
     )
 
     count =0
-
+    mkdir()
     while playlistitems_list_request and count < 4:
       playlistitems_list_response = playlistitems_list_request.execute()
 
