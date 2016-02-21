@@ -6,34 +6,25 @@ sys.path.append("./lib")
 import httplib2
 import os
 
+from subprocess import call
+from pydub import AudioSegment
 from apiclient.discovery import build_from_document
 from apiclient.errors import HttpError
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 from oauth2client.tools import argparser, run_flow
 
+INPUT_DIR = "./input/"
+OUTPUT_DIR = "./output/"
+START_TAG = "start"
+DUR_TAG = "dur"
 
-# The CLIENT_SECRETS_FILE variable specifies the name of a file that contains
-
-# the OAuth 2.0 information for this application, including its client_id and
-# client_secret. You can acquire an OAuth 2.0 client ID and client secret from
-# the Google Developers Console at
-# https://console.developers.google.com/.
-# Please ensure that you have enabled the YouTube Data API for your project.
-# For more information about using OAuth2 to access the YouTube Data API, see:
-#   https://developers.google.com/youtube/v3/guides/authentication
-# For more information about the client_secrets.json file format, see:
-#   https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
 CLIENT_SECRETS_FILE = "client_secrets.json"
 
-# This OAuth 2.0 access scope allows for full read/write access to the
-# authenticated user's account and requires requests to use an SSL connection.
 YOUTUBE_READ_WRITE_SSL_SCOPE = "https://www.googleapis.com/auth/youtube.force-ssl"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
-# This variable defines a message to display if the CLIENT_SECRETS_FILE is
-# missing.
 MISSING_CLIENT_SECRETS_MESSAGE = """
 WARNING: Please configure OAuth 2.0
 
@@ -66,9 +57,18 @@ def get_authenticated_service(args):
     return build_from_document(doc, http=credentials.authorize(httplib2.Http()))
 
 
-def cutTheAudio(filename, timeOne, timeTwo, captionNo):
-  print timeOne
-  print timeTwo
+def downloadVideo(channelID, videoID):
+  call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+"/123", "https://www.youtube.com/watch?v="+videoID])
+
+def cutTheAudio(filename, timeOne, timeTwo, captionNum):
+   success = 0;
+   #TODO deal with >>, different people speaking etc
+   # ogg_version = AudioSegment.from_ogg(INPUT_DIR+filename+".ogg")
+   webm_version = AudioSegment.from_ogg(INPUT_DIR+filename+".webm")
+   split = song[timeOne:timeTwo]
+
+   split.export(OUTPUT_DIR+filename+"-"+captionNum+".wav", format="wav")
+   return success;
 
 def convTimeToMilli(time):
   milliTime = 0
@@ -79,24 +79,29 @@ def convTimeToMilli(time):
   return milliTime
 
 def trim(subtitle):
+  downloadVideo("","")
   splitSubs = subtitle.split("\n")
-  capCount = 0
-  timeStamp = 1
+  capCount = 1
+  captionFinishedState = 1
+  startSplit = 0
+  endSplit = 0
   currLine =""
   for s in splitSubs:
     if len(s) == 0:
       print currLine
-      print capCount
+      cutTheAudio("123", startSplit, endSplit, capCount)
       capCount+=1
-      timeStamp=1
-      currLine =""
+      captionFinishedState=1
     else:
-      if timeStamp==1:
+      if captionFinishedState==1:
+        print capCount
         currLine =""
         times = s.split(",")
-        print "start at ",times[0], "or", convTimeToMilli(times[0]),
-        print "end at ",times[1], "or", convTimeToMilli(times[1])
-        timeStamp=0
+        startSplit=convTimeToMilli(times[0])
+        endSplit=convTimeToMilli(times[1])
+        print "start at ",times[0], "or", startSplit
+        print "end at ",times[1], "or", endSplit
+        captionFinishedState=0
       else:
         currLine +=s.strip()+" "
 
@@ -109,11 +114,13 @@ def list_captions(youtube, video_id):
 
   for item in results["items"]:
     capid = item["id"]
-    name = item["snippet"]["name"]
     language = item["snippet"]["language"]
+    trackKind = item["snippet"]["trackKind"]
 
-    print "Caption track '%s(%s)' in '%s' language." % (name, capid, language)
-
+    print "Caption track in '%s' language, of type '%s'." % (language,trackKind)
+    if trackKind == "ASR":
+      print "Type ASR, skipping"
+      continue
     subtitle = youtube.captions().download(
       id=capid,
       tfmt='sbv').execute()
