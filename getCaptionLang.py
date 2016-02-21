@@ -29,6 +29,7 @@ YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 folderName =""
 videoIDName =""
+videoCount = 0
 captionFileName ="captionLabels.csv"
 
 MISSING_CLIENT_SECRETS_MESSAGE = """
@@ -67,7 +68,7 @@ def downloadVideo(channelID, videoID):
   call(["./lib/youtube-dl", "-f", "bestaudio", "-o", INPUT_DIR+videoIDName, "https://www.youtube.com/watch?v="+videoID])
 
 def deleteVideo():
-  call(["rm", INPUT_DIR+videoIDName+".webm"])
+  call(["rm", INPUT_DIR+videoIDName])
 
 def mkdir():
   call(["mkdir", OUTPUT_DIR+folderName+"/"])
@@ -83,7 +84,7 @@ def cutTheAudio(timeOne, timeTwo, captionNum):
 def convTimeToMilli(time):
   milliTime = 0
   times = time.split(":")
-  print times
+  
   milliTime += int(times[0])*60*60*1000
   milliTime += int(times[1])*60*1000
   milliTime += float(times[2])*1000
@@ -93,30 +94,31 @@ def captionParser(allCaptions):
   with open(OUTPUT_DIR+folderName+captionFileName, "a") as captionFile:
     captionBlocks = allCaptions.split("\n\n")
     capCount = 1
-    for block in captionBlocks:
+    for block in captionBlocks:      
       if len(block) >= 3:
+        print "["+ videoCount + "] " + videoIDName + " " + capCount + "/" + len(captionBlocks) + "\n"
         # timestamps
         lines = block.split("\n")
         times = lines[0].split(",")
         millistart = convTimeToMilli(times[0])
         startSplit= millistart-STARTFIX if millistart - STARTFIX > 0  else int(0)
         endSplit=convTimeToMilli(times[1]) + STARTFIX
-        print "start at ",times[0], "or", startSplit
-        print "end at ",times[1], "or", endSplit
+        #print "start at ",times[0], "or", startSplit
+        #print "end at ",times[1], "or", endSplit
         
         #caption text
         currLine =""
         for i in range(1, len(lines)):
           currLine += lines[i].strip()+" "
-        
-        print currLine
+         
+        #print currLine
         # save the data
         cutTheAudio(startSplit, endSplit, capCount)
-        text = str(capCount)+"| "+ videoIDName+"| "+str(startSplit)+"| "+ str(endSplit)+"| "+ str(endSplit-startSplit) + "| "
+        text = videoIDName+"| "+str(capCount)+"| "+ str(startSplit)+"| "+ str(endSplit)+"| "+ str(endSplit-startSplit) + "| "
         text = text.encode("UTF-8") + currLine + "\n"
         captionFile.write(text)
         capCount+=1;
-        
+
 def list_captions(youtube, video_id):
   results = youtube.captions().list(
     part="snippet",
@@ -147,6 +149,7 @@ def list_captions(youtube, video_id):
 def callVid(video_id):
   try:
     list_captions(youtube, video_id)
+    videoCount += 1
   except HttpError, e:
     print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
   else:
@@ -170,7 +173,7 @@ if __name__ == "__main__":
     playlistitems_list_request = youtube.playlistItems().list(
       playlistId=uploads_list_id,
       part="snippet",
-      maxResults=1
+      maxResults=50
     )
 
     count =0
