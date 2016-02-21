@@ -5,6 +5,7 @@ sys.path.append("./lib")
 
 import httplib2
 import os
+import re
 
 from subprocess import call
 from pydub import AudioSegment
@@ -19,6 +20,7 @@ OUTPUT_DIR = "output\\"
 START_TAG = "start"
 DUR_TAG = "dur"
 STARTFIX = 150
+nameColonRegex = re.compile("([^\s]+\:.*)")
 
 sys.getdefaultencoding()
 
@@ -91,6 +93,11 @@ def convTimeToMilli(time):
   milliTime += float(times[2])*1000
   return milliTime
 
+def isTrash(line):
+  if (line.startswith("[") and line.endswith("]")) or nameColonRegex.match(line):
+    return True
+  return False
+
 def captionParser(allCaptions):
   with open(OUTPUT_DIR+folderName+captionFileName, "a") as captionFile:
     captionBlocks = allCaptions.split("\n\n")
@@ -112,12 +119,13 @@ def captionParser(allCaptions):
         for i in range(1, len(lines)):
           currLine += lines[i].strip()+" "
 
-        #print currLine
-        # save the data
-        cutTheAudio(startSplit, endSplit, capCount)
-        text = videoIDName+"| "+str(capCount)+"| "+ str(startSplit)+"| "+ str(endSplit)+"| "+ str(endSplit-startSplit) + "| "
-        text = text.encode("UTF-8") + currLine + "\n"
-        captionFile.write(text)
+        if not isTrash(currLine):
+          #print currLine
+          # save the data
+          cutTheAudio(startSplit, endSplit, capCount)
+          text = videoIDName+"| "+str(capCount)+"| "+ str(startSplit)+"| "+ str(endSplit)+"| "+ str(endSplit-startSplit) + "| "
+          text = text.encode("UTF-8") + currLine + "\n"
+          captionFile.write(text)
         capCount+=1;
 
 def list_captions(youtube, video_id):
