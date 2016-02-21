@@ -149,6 +149,7 @@ def list_captions(youtube, video_id):
 def callVid(video_id):
   try:
     list_captions(youtube, video_id)
+    global videoCount
     videoCount += 1
   except HttpError, e:
     print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
